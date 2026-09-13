@@ -5,15 +5,20 @@ import argparse
 import hashlib
 import importlib.metadata
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 
 KIT = Path(__file__).resolve().parent
+REQUIRED_FILES = frozenset({"INSTRUCTIONS.txt", "README.md", "llmlingua_cli.py",
+                           "optional_api.py", "pre-commit.yaml", "preflight.py",
+                           "requirements.txt", "setup.sh", "test_preflight.py"})
 
 
-def installed_drift(kit: Path = KIT) -> list[str]:
+def installed_drift(kit: Path = KIT, bin_dir: Path | None = None) -> list[str]:
     failures = []
+    bin_dir = bin_dir or Path(sys.executable).parent
     for line in (kit / "requirements.txt").read_text(encoding="utf-8").splitlines():
         name, expected = line.split("==")
         name = name.split("[")[0]
@@ -23,6 +28,10 @@ def installed_drift(kit: Path = KIT) -> list[str]:
             actual = "missing"
         if actual != expected:
             failures.append(f"{name}: {actual}; expected {expected}")
+        if name in {"ruff", "prek", "litellm"}:
+            executable = bin_dir / name
+            if not executable.is_file() or not os.access(executable, os.X_OK):
+                failures.append(f"{name}: missing executable")
     return failures
 
 
@@ -35,6 +44,9 @@ def verify_bundle(kit: Path = KIT) -> list[str]:
             raise ValueError("Manifest path escapes the kit")
         if not target.is_file() or hashlib.sha256(target.read_text(encoding="utf-8").encode("utf-8")).hexdigest() != expected:
             failures.append(name)
+    listed = set(manifest["sha256"])
+    failures.extend(f"manifest missing: {name}" for name in sorted(REQUIRED_FILES - listed))
+    failures.extend(f"manifest unexpected: {name}" for name in sorted(listed - REQUIRED_FILES))
     return failures
 
 
