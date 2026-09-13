@@ -1,3 +1,12 @@
+<!-- BEGIN IDEALX COST TOOLS -->
+Cost-aware coding applies locally and in cloud work. Read
+`.codex/cost-tools/INSTRUCTIONS.txt` once per task unless already loaded.
+Before commits run `python .codex/cost-tools/preflight.py`; preserve all existing
+tests and reviews. Cloud setup and maintenance run
+`bash .codex/cost-tools/setup.sh`. Repair missing tools through that isolated
+installer. On Linux, run it if tool verification fails. Use RTK/Caveman for bounded output; keep raw review evidence.
+<!-- END IDEALX COST TOOLS -->
+
 # AGENTS.md
 
 Instructions for AI coding agents (Claude Code, Codex, Cursor, Copilot agents, …)

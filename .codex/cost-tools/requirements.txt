@@ -1,0 +1,5 @@
+ruff==0.16.7
+prek==0.5.3
+litellm[proxy]==1.100.1
+llmlingua==0.2.2
+torch==2.14.0+cpu

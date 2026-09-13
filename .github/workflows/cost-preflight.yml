@@ -1,0 +1,35 @@
+name: Cost tools preflight
+on:
+  push:
+    paths: ['**.py', '**.pyi', '.codex/cost-tools/**', '.github/workflows/cost-preflight.yml', 'AGENTS.md', 'scripts/session_setup.sh']
+  workflow_dispatch:
+  schedule:
+    - cron: '30 10 * * 1'
+permissions:
+  contents: read
+concurrency:
+  group: cost-preflight-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install --disable-pip-version-check --quiet ruff==0.16.7 prek==0.5.3
+      - name: Test portable guards
+        run: python -m unittest discover -s .codex/cost-tools -p "test_*.py"
+      - name: Verify kit and changed Python
+        env:
+          BASE: ${{ github.event.before }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            BASE=$(git merge-base HEAD "origin/$DEFAULT_BRANCH")
+          fi
+          python .codex/cost-tools/preflight.py --base "$BASE"

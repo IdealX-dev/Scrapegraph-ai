@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: idealx-ruff
+        name: Python correctness preflight
+        language: system
+        entry: ruff check --isolated --select E9,F63,F7,F82 --output-format concise
+        types_or: [python, pyi]
+        require_serial: true
